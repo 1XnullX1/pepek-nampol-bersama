@@ -55,6 +55,11 @@
                 // Include database connection file
                 include_once("koneksi.php");
 
+                //START DATE
+                $start      = $mysqli->query("SELECT * FROM user_log ORDER BY date ASC LIMIT 1");
+                $end        = $mysqli->query("SELECT * FROM user_log ORDER BY date DESC LIMIT 1");
+                $date_start = $start->fetch_assoc();
+                $date_end   = $end->fetch_assoc();
 
                 // Fetch data from the user_log table with pagination
                 $result = $mysqli->query("SELECT * FROM user_log");
@@ -74,24 +79,41 @@
         </table>
         <!--- awokawokwa --->
 
+        <hr />
+
         <div class="container mt-4">
-            <h3>User Log Data</h3>
-            <form method="POST" action="">
-                <div class="form-group row">
-                    <label for="days" class="col-sm-2 col-form-label">Number of Days:</label>
-                    <div class="col-sm-4">
-                        <input type="number" class="form-control" id="days" name="days" min="1" value="30">
+            <!--<h3>User Log Data</h3>-->
+            <form method="POST" action="analisis.php">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="from" class="col-sm-2 col-form-label">From</label>
+                            <input type="date" class="form-control" id="from" name="from"
+                                value="<?php echo $date_start["date"]; ?>" min="<?php echo $date_start["date"]; ?>"
+                                max="<?php echo $date_end["date"]; ?>">
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <button type="submit" class="btn btn-primary">Show Data</button>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="to" class="col-sm-2 col-form-label">To</label>
+                            <input type="date" class="form-control" id="to" name="to"
+                                min="<?php echo $date_start["date"]; ?>" max="<?php echo $date_end["date"]; ?>"
+                                value="<?php echo $date_end["date"]; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group" style="margin-top: 40px;">
+                            <button type="submit" class="btn btn-primary">Show Data</button>
+                        </div>
                     </div>
                 </div>
-            </form>
-            <?php
+        </div>
+        </form>
+        <?php
 // Include database connection file
 include("koneksi.php");
 
-$days = isset($_POST['days']) ? $_POST['days'] : 30; // Number of days
+//$days = isset($_POST['days']) ? $_POST['days'] : 30; // Number of days
 
 // Define the mapping array for condition values to string labels
 $conditionLabels = array(
@@ -105,13 +127,17 @@ $conditionLabels = array(
 $conditionArray = [1, 2, 3, 4, 5]; // Condition values to display
 
 // Calculate the date range
-$dateRange = date('Y-m-d', strtotime('-' . $days . ' days')) . " to " . date('Y-m-d');
+//$dateRange = date('Y-m-d', strtotime('-' . $days . ' days')) . " to " . date('Y-m-d');
 
 $dataPoints = array();
 
 foreach ($conditionArray as $condition) {
     // Fetch data from the user_log table within the date range and specific condition value
-    $result = $mysqli->query("SELECT COUNT(*) AS count FROM user_log WHERE `condition` = $condition AND date >= '" . date('Y-m-d', strtotime('-' . $days . ' days')) . "'");
+    if(isset($_POST["from"]) && isset($_POST["to"])){
+        $result = $mysqli->query("SELECT COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."'");
+    }else{
+        $result = $mysqli->query("SELECT COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."'");
+    }
 
     // Check for errors in the query execution
     if (!$result) {
@@ -131,68 +157,77 @@ $lineConditionArray = [2, 4, 5]; // Condition values for the line chart
 $lineDataPoints = array();
 
 foreach ($lineConditionArray as $condition) {
-    $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE `condition` = $condition AND date >= '" . date('Y-m-d', strtotime('-' . $days . ' days')) . "' GROUP BY date");
+    if(isset($_POST["from"]) && isset($_POST["to"])){
+        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
+    }else{
+        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."'");
+    }
     while ($lineRow = $lineResult->fetch_assoc()) {
         $lineDataPoints[$lineRow['date']] = isset($lineDataPoints[$lineRow['date']]) ? $lineDataPoints[$lineRow['date']] + $lineRow['count'] : $lineRow['count'];
     }
 }
 
 ?>
-            <!-- Bar Chart Container -->
-            <div class="container mt-4">
-                <h3>User Log Data - Bar Chart</h3>
-                <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+        <!-- Bar Chart Container -->
+        <div class="container mt-4">
+            <h3>User Log Data - Bar Chart</h3>
+            <div id="chartContainer" style="height: 300px; width: 100%;">
                 <div id="lineChartContainer" style="height: 300px; width: 100%;"></div>
-                <script>
-                window.onload = function() {
-                    // Bar Chart
-                    var dataPoints = <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>;
-                    var chart = new CanvasJS.Chart("chartContainer", {
-                        animationEnabled: true,
-                        title: {
-                            text: "User Log Data by Condition"
-                        },
-                        data: [{
-                            type: "bar",
-                            dataPoints: dataPoints
-                        }]
-                    });
-                    chart.render();
-
-                    // Line Chart
-                    var lineDataPoints = <?php echo json_encode($lineDataPoints, JSON_NUMERIC_CHECK); ?>;
-                    var lineChart = new CanvasJS.Chart("lineChartContainer", {
-                        animationEnabled: true,
-                        title: {
-                            text: "Total Data Points with Conditions 2, 4, and 5"
-                        },
-                        axisX: {
-                            title: "Date"
-                        },
-                        axisY: {
-                            title: "Total Data Points",
-                            includeZero: false
-                        },
-                        data: [{
-                            type: "line",
-                            dataPoints: lineDataPoints
-                        }]
-                    });
-                    lineChart.render();
-                }
-                </script>
             </div>
-            <hr>
 
+            <script>
+            window.onload = function() {
+                // Bar Chart
+                var dataPoints = <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>;
+                var chart = new CanvasJS.Chart("chartContainer", {
+                    animationEnabled: true,
+                    title: {
+                        text: "User Log Data by Condition"
+                    },
+                    data: [{
+                        type: "column",
+                        dataPoints: dataPoints
+                    }]
+                });
+                chart.render();
 
+                // Line Chart
+                /*
+                var lineDataPoints = <?php echo json_encode($lineDataPoints, JSON_NUMERIC_CHECK); ?>;
+                var lineChart = new CanvasJS.Chart("lineChartContainer", {
+                    animationEnabled: true,
+                    title: {
+                        text: "Total Data Points with Conditions 2, 4, and 5"
+                    },
+                    axisX: {
+                        title: "Date"
+                    },
+                    axisY: {
+                        title: "Total Data Points",
+                        includeZero: false
+                    },
+                    data: [{
+                        type: "line",
+                        dataPoints: lineDataPoints
+                    }]
+                });
+                lineChart.render();
+                */
+            }
+            </script>
+        </div>
+        <hr>
 
-
-            <!-- Chart Explanation -->
-            <div class="mt-4">
-
-                <p>Berikut adalah diagram batang yang menunjukkan jumlah titik data untuk setiap kondisi.:</p>
-                <ul>
-                    <?php
+        <!-- Chart Explanation -->
+        <div class="mt-4">
+            <?php
+            if(isset($_POST["from"]) && isset($_POST["to"])){
+                echo '<p>Data dari tanggal <b>'.date('d F Y', strtotime($_POST['from'])).'</b> sampai <b>'.date('d F Y', strtotime($_POST['to'])).'</b></p>';
+            }
+            ?>
+            <p>Berikut adalah diagram batang yang menunjukkan jumlah titik data untuk setiap kondisi.:</p>
+            <ul>
+                <?php
                 foreach ($conditionArray as $condition) {
                     // Get the string label for the condition
                     $conditionLabel = $conditionLabels[$condition];
@@ -219,18 +254,18 @@ foreach ($lineConditionArray as $condition) {
                     }
                 }
                 ?>
-                </ul>
+            </ul>
 
-            </div>
+        </div>
 
-            <!-- <quote>
+        <!-- <quote>
             <h3>TEST</h3>
             <p>ini adalah penjelasan</p>
         </quote> -->
 
-            <!--asw-->
+        <!--asw-->
 
-            <!-- <p>Condition = “1” adalah durasi waktu masuk area dibawah 12 jam.<br>
+        <!-- <p>Condition = “1” adalah durasi waktu masuk area dibawah 12 jam.<br>
                 Condition = “2” adalah durasi waktu masuk area diatas 12 jam.<br>
                 Condition = “3” adalah belum melakukan tap out. <br>
                 Condition = “4” adalah belum melakukan tap out tetapi melakukan tap in kembali dalam waktu rentan 24
@@ -238,19 +273,19 @@ foreach ($lineConditionArray as $condition) {
                 Condition = “5” adalah kartu sudah tidak aktif akan tetapi ditap.
             </p> -->
 
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="assets/js/bootstrap.min.js"></script>
-            <!-- Add the necessary libraries for the chart -->
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <!-- <script src="analisis_process.php"></script> -->
-            <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-            <script src="assets/js/datatable.js"></script>
+        <script src="assets/js/jquery-3.5.1.min.js"></script>
+        <script src="assets/js/bootstrap.min.js"></script>
+        <!-- Add the necessary libraries for the chart -->
+        <!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+        <!-- <script src="analisis_process.php"></script> -->
+        <script src="assets/js/canvas.min.js"></script>
+        <script src="assets/js/datatable.js"></script>
 
-            <script>
-            $(document).ready(function() {
-                $("#datatables").DataTable();
-            });
-            </script>
+        <script>
+        $(document).ready(function() {
+            $("#datatables").DataTable();
+        });
+        </script>
 </body>
 
 </html>
