@@ -38,6 +38,9 @@
     </nav>
 
     <div class="container mt-4">
+        <span class="float-right">
+            <a class="btn btn-outline-primary" href="analisis_naive.php" target="_blank">Naive</a>
+        </span>
         <h3>User Log Data</h3>
         <table class="table table-bordered" id="datatables">
             <thead>
@@ -54,9 +57,8 @@
             <tbody>
                 <?php
                 // Include database connection file
-                error_reporting(0);
-                include_once("koneksi.php");
-                $no = 0;
+                include("koneksi.php");
+                $no = 1;
 
                 //START DATE
                 $start      = $mysqli->query("SELECT * FROM user_log ORDER BY date ASC LIMIT 1");
@@ -68,9 +70,8 @@
                 $result = $mysqli->query("SELECT * FROM user_log");
 
                 while ($row = $result->fetch_assoc()) {
-                    $no++;
                     echo "<tr>";
-                    echo "<td>".$no."</td>";
+                    echo "<td>" . $no . "</td>";
                     echo "<td>" . $row['nik'] . "</td>";
                     echo "<td>" . $row['date'] . "</td>";
                     echo "<td>" . $row['time_stamp_in'] . "</td>";
@@ -78,6 +79,7 @@
                     echo "<td>" . $row['calculation_time'] . "</td>";
                     echo "<td>" . $row['condition'] . "</td>";
                     echo "</tr>";
+                    $no++;
                 }
                 ?>
             </tbody>
@@ -112,178 +114,8 @@
                         </div>
                     </div>
                 </div>
+            </form>
         </div>
-        </form>
-        <?php
-// Include database connection file
-include("koneksi.php");
-
-//$days = isset($_POST['days']) ? $_POST['days'] : 30; // Number of days
-
-// Define the mapping array for condition values to string labels
-$conditionLabels = array(
-    1 => "CONDITION 1",
-    2 => "CONDITION 2",
-    3 => "CONDITION 3",
-    4 => "CONDITION 4",
-    5 => "CONDITION 5"
-);
-
-$conditionArray = [1, 2, 3, 4, 5]; // Condition values to display
-
-// Calculate the date range
-//$dateRange = date('Y-m-d', strtotime('-' . $days . ' days')) . " to " . date('Y-m-d');
-
-$dataPoints = array();
-
-foreach ($conditionArray as $condition) {
-    // Fetch data from the user_log table within the date range and specific condition value
-    if(isset($_POST["from"]) && isset($_POST["to"])){
-        $result = $mysqli->query("SELECT COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."'");
-    }else{
-        $result = $mysqli->query("SELECT COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."'");
-    }
-
-    // Check for errors in the query execution
-    if (!$result) {
-        die("Error: " . $mysqli->error);
-    }
-
-    $row = $result->fetch_assoc();
-
-    // Use the mapping array to get the string label for the condition
-    $conditionLabel = $conditionLabels[$condition];
-
-    $dataPoints[] = array("label" => $conditionLabel, "y" => $row['count']);
-}
-
-// Fetch data for the line chart (conditions 2, 4, and 5)
-/*
-$lineConditionArray = [2, 4, 5]; // Condition values for the line chart
-$lineDataPoints = array();
-
-foreach ($lineConditionArray as $condition) {
-    if(isset($_POST["from"]) && isset($_POST["to"])){
-        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
-    }else{
-        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$condition."'");
-    }
-    while ($lineRow = $lineResult->fetch_assoc()) {
-        $lineDataPoints[$lineRow['date']] = isset($lineDataPoints[$lineRow['date']]) ? $lineDataPoints[$lineRow['date']] + $lineRow['count'] : $lineRow['count'];
-    }
-}
-*/
-?>
-        <!-- Bar Chart Container -->
-        <div class="container mt-4">
-            <h3>User Log Data - Bar Chart</h3>
-            <div class="row">
-                <div class="col-md-12">
-                    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
-                </div>
-                <?php for($i = 1; $i <= 5; $i++){ ?>
-                <div class="col-md-12" style="padding-top: 70px;">
-                    <div id="lineChartContainer_<?php echo $i; ?>" style="height: 300px; width: 100%;"></div>
-                </div>
-                <?php } ?>
-            </div>
-            <script>
-            window.onload = function() {
-                // Bar Chart
-                var dataPoints = <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>;
-                var chart = new CanvasJS.Chart("chartContainer", {
-                    animationEnabled: true,
-                    title: {
-                        text: "User Log Data by Condition"
-                    },
-                    data: [{
-                        type: "column",
-                        dataPoints: dataPoints
-                    }]
-                });
-                chart.render();
-
-                <?php
-                for($i = 1; $i <= 5; $i++){
-                    if(isset($_POST["from"]) && isset($_POST["to"])){
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
-                    }else{
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
-                    }
-
-                    while ($lineRow = $lineResult->fetch_assoc()) {
-                        $dataLine[$i][] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
-                    }
-                ?>
-                // Line Chart
-                var lineDataPoints_<?php echo $i; ?> =
-                    <?php echo json_encode($dataLine[$i], JSON_NUMERIC_CHECK); ?>;
-                var lineChart_<?php echo $i; ?> = new CanvasJS.Chart("lineChartContainer_<?php echo $i; ?>", {
-                    animationEnabled: true,
-                    title: {
-                        text: "Total Data Points with Conditions <?php echo $i; ?>"
-                    },
-                    axisX: {
-                        title: "Date"
-                    },
-                    axisY: {
-                        title: "Total Data Points",
-                        includeZero: false
-                    },
-                    data: [{
-                        type: "line",
-                        dataPoints: lineDataPoints_<?php echo $i; ?>
-                    }]
-                });
-                lineChart_<?php echo $i; ?>.render();
-                <?php } ?>
-            }
-            </script>
-        </div>
-        <hr>
-
-        <!-- Chart Explanation -->
-        <div class="mt-4">
-            <?php
-            if(isset($_POST["from"]) && isset($_POST["to"])){
-                echo '<p>Data dari tanggal <b>'.date('d F Y', strtotime($_POST['from'])).'</b> sampai <b>'.date('d F Y', strtotime($_POST['to'])).'</b></p>';
-            }
-            ?>
-            <p>Berikut adalah diagram batang yang menunjukkan jumlah titik data untuk setiap kondisi.:</p>
-            <ul>
-                <?php
-                foreach ($conditionArray as $condition) {
-                    // Get the string label for the condition
-                    $conditionLabel = $conditionLabels[$condition];
-
-                    // Get the total count for the current condition
-                    $count = 0;
-                    foreach ($dataPoints as $dataPoint) {
-                        if ($dataPoint['label'] === $conditionLabel) {
-                            $count = $dataPoint['y'];
-                            break;
-                        }
-                    }
-
-                    if ($condition === 1) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja dibawah 12 jam, berjumlah $count.</strong></li>";
-                    } else if ($condition === 2) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja diatas 12 jam, berjumlah $count.</strong></li>";
-                    } else if ($condition === 3) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja belum melakukan tap out, ada $count.</strong></li>";
-                    } else if ($condition === 4) {
-                        echo "<li><strong>Jumlah pekerja yang melakukan tap in lebih dari 1 kali tanpa melakukan penyelesaian tap out, berjumlah $count.</strong></li>";
-                    } else if ($condition === 5) {
-                        echo "<li><strong>Percobaan tap in dengan kartu sudah tidak aktif, berjumlah $count.</strong></li>";
-                    }
-                }
-                ?>
-            </ul>
-
-        </div>
-
-        <hr />
-
         <div class="container mt-4">
             <?php 
                 include("koneksi.php");
@@ -321,12 +153,7 @@ foreach ($lineConditionArray as $condition) {
                 // array("Wednesday", "09:30", "18:45"),
                 // array("Thursday", "10:00", "18:00"),
             );
-            if(isset($_POST["from"]) && isset($_POST["to"])){
-                $result = $mysqli->query("SELECT * FROM user_log where date >= '".$_POST['from']."' AND date <= '".$_POST['to']."'");
-            }else{
-                $result = $mysqli->query("SELECT * FROM user_log where  date >= '".$_POST['from']."' AND date <= '".$_POST['to']."'");
-            }
-
+            $result = $mysqli->query("SELECT * FROM user_log where date = '".date('Y-m-d')."'");
             foreach ($result as $row) {
                 $testData[] = array($row['no_log'], $row['time_stamp_in'], $row['time_stamp_out']);
                 
@@ -406,17 +233,12 @@ foreach ($lineConditionArray as $condition) {
             // Tampilkan hasil prediksi
             echo "<html><head><title>Hasil Prediksi Anomali Absensi</title></head><body>";
             echo "<h1>Hasil Prediksi Anomali Absensi</h1>";
-            echo "<table class='table table-bordered'><tr><th>No Log</th><th>NIK</th><th>Prediksi Kelas</th><th>True Condition</th></tr>";
+            echo "<table border='1'><tr><th>Data Test</th><th>NIK</th><th>Prediksi Kelas</th><th>True Condition</th></tr>";
             for ($i = 0; $i < count($testData) - 1; $i++) {
-                if(isset($_POST["from"]) && isset($_POST["to"])){
-                    $data = $mysqli->query("SELECT * FROM user_log where no_log = '".$testData[$i+1][0]."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."'");
-                }else{
-                    $data = $mysqli->query("SELECT * FROM user_log where no_log = '".$testData[$i+1][0]."'");
-                }
-
+                $data = $mysqli->query("SELECT * FROM user_log where no_log = '".$testData[$i+1][0]."'");
                 $result = $data->fetch_array();
                 $style = (in_array($result['condition'], $lineConditionArray)) ? ' style="background:#e94335;color:#f1f1f1;" ':'';
-                echo '<tr><td>'.$result['no_log'].'</td><td title="No Log '.$result['no_log'].'">'.$result['nik'].'</td><td>'.$predictedClasses[$i].'</td><td '.$style.'>'.$result['condition'].'</td></tr>';
+                echo '<tr><td>Data Test '.($i + 1).'</td><td title="No Log '.$result['no_log'].'">'.$result['nik'].'</td><td>'.$predictedClasses[$i].'</td><td '.$style.'>'.$result['condition'].'</td></tr>';
             }
             echo "</table></body></html>";
 

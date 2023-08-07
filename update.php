@@ -57,13 +57,13 @@ function updateData()
         $filename = isset($filename) ? ", lokasi_gambar='$filename'" : "";
         $result = mysqli_query($mysqli, "UPDATE user SET jenis_id='$jenis_id', nama='$nama', alamat='$alamat', tanggal_mulai='$tanggal_hari_ini', tanggal_berlaku='$tanggal_berlaku', status_user='$status_user', validation='$validation', lokasi_gambar ='$filename_with_extension'WHERE no_id='$no_id'");
         if ($result) {
-            echo "<script>alert('Record updated successfully'); window.location='registrasi.php';</script>";
+            echo "<script>alert('Record updated successfully'); window.location='update_user.php';</script>";
         } else {
             echo "Error updating record: " . mysqli_error($mysqli);
         }
     } else {
         // Alert if no_id doesn't exist
-        echo "<script>alert('No Identitas not found'); window.location='registrasi.php';</script>";
+        echo "<script>alert('No Identitas not found'); window.location='update_user.php';</script>";
     }
 
     // Close connection
