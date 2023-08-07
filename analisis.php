@@ -180,18 +180,7 @@ foreach ($lineConditionArray as $condition) {
                 <div class="col-md-12">
                     <div id="chartContainer" style="height: 300px; width: 100%;"></div>
                 </div>
-                <?php
-                for($i = 1; $i <= 5; $i++){
-                    if(isset($_POST["from"]) && isset($_POST["to"])){
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
-                    }else{
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
-                    }
-
-                    while ($lineRow = $lineResult->fetch_assoc()) {
-                        $dataLine[$i] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
-                    }
-                ?>
+                <?php for($i = 1; $i <= 5; $i++){ ?>
                 <div class="col-md-12" style="padding-top: 70px;">
                     <div id="lineChartContainer_<?php echo $i; ?>" style="height: 300px; width: 100%;"></div>
                 </div>
@@ -213,7 +202,18 @@ foreach ($lineConditionArray as $condition) {
                 });
                 chart.render();
 
-                <?php for($i = 1; $i <= 5; $i++){ ?>
+                <?php
+                for($i = 1; $i <= 5; $i++){
+                    if(isset($_POST["from"]) && isset($_POST["to"])){
+                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
+                    }else{
+                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
+                    }
+
+                    while ($lineRow = $lineResult->fetch_assoc()) {
+                        $dataLine[$i][] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
+                    }
+                ?>
                 // Line Chart
                 var lineDataPoints_<?php echo $i; ?> =
                     <?php echo json_encode($dataLine[$i], JSON_NUMERIC_CHECK); ?>;
