@@ -1,0 +1,23 @@
+{
+  "name": "usb",
+  "version": "1.0.0",
+  "description": "CRUD PHP 7 DENGAN BOOTSTRAP 4 SEDERHANA Ini hanya untuk bahan pembelajaran selengkapnya ada diwebsite gilacoding.com atau youtube gilacoding",
+  "main": "adapter.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1XnullX1/pepek-nampol-bersama.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/1XnullX1/pepek-nampol-bersama/issues"
+  },
+  "homepage": "https://github.com/josephdadams/USBRelay",
+  "dependencies": {
+    "@josephdadams/usbrelay": "^1.0.3",
+    "express": "^4.18.2"
+  }
+}

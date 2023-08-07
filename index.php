@@ -1,62 +1,39 @@
+<?php
+  include('Controller/controller.data.config.php');
+  // disini untuk menonaktifkan error display pada PHP! jika 1 = tampil, Jika 0 = tidak tampil.
+   error_reporting(0);
+  
+  // Session_Start Untuk menulis cookie session pada browser.
+   session_start();
+   // Fungsi yg di Declare di Folder Control dalam PHP > controller.data.config.php
+   GetLoginAccess($mysqli);
+  ?>
+
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Form Login</title>
+    <title><?php echo $_TITLE_NAME;?></title>
 </head>
 <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
-<body>
-	<div class="container col-md-6 mt-4">
-		 <form method="POST">
-    <img class="mb-4" src="/docs/5.2/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">
-    <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
 
-    <div class="form-floating">
-      <input type="text" class="form-control" id="floatingInput" placeholder="Username" name="username">
-      <label for="floatingInput">Username</label>
-    </div>
-    <div class="form-floating">
-      <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password">
-      <label for="floatingPassword">Password</label>
-    </div>
+<!--- Style signin CSS untuk memperbaiki / memperindah tampilan layout pada Form Login -->
+<link href="assets/css/signin.css" rel="stylesheet">
 
-    <div class="checkbox mb-3">
-      <label>
-        <input type="checkbox" value="remember-me"> Remember me
-      </label>
-    </div>
-
-	
-
- 	<button class="w-100 btn btn-lg btn-primary" type="submit" name="enter" value="enter">Sign in</button>
-    <p class="mt-5 mb-3 text-muted">&copy; 2017–2022</p>
-	
-  </form>
-		</div>
-	</div>
-  
-  <?php
-  // if ($_GET['action'] =='not_yet_logged_in')
-  // {
-  //   echo "<div id ='infoMessage'>Anda Belum Login.</div>";
-  // }
-  if ($_POST)
-  {
-    $username = 'XnullX';
-    $password = 'XnullX';
-
-    if($_POST['username']==$username &&
-    $_POST['password']==$password){
-      $_SESSION['loged_in'] = true;
-      header('location: koneksi.php');
-      echo "<div id='failedMessage'>Ok.</div>";
-    }
-    else
-    {
-      echo "<div id ='failedMessage'>Akses ditolak.</div>";
-    }
-  }
-  ?>
-  <script type="text/javascript" src="assets/js/jquery-3.5.1.min.js"></script>
+<body class="text-center">
+    <form class="form-signin" method="POST">
+        <img class="mb-4" src="img/dfn.png" alt="" width="72" height="72">
+        <h1 class="h3 mb-3 font-weight-normal">Silahkan Masuk</h1>
+        <label for="inputEmail" class="sr-only">Username</label>
+        <input type="text" id="input" name="username" class="form-control" placeholder="Username" required autofocus>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        <p class="mt-5 mb-3 text-muted">&copy; Dufan 2016 - 2023</p>
+    </form>
+</body>
+<script type="text/javascript" src="assets/js/jquery-3.5.1.min.js"></script>
 <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
 </body>
+
 </html>
