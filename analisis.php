@@ -42,6 +42,7 @@
         <table class="table table-bordered" id="datatables">
             <thead>
                 <tr>
+                    <th>No</th>
                     <th>NIK</th>
                     <th>Date</th>
                     <th>Time In</th>
@@ -54,6 +55,7 @@
                 <?php
                 // Include database connection file
                 include_once("koneksi.php");
+                $no = 0;
 
                 //START DATE
                 $start      = $mysqli->query("SELECT * FROM user_log ORDER BY date ASC LIMIT 1");
@@ -65,7 +67,9 @@
                 $result = $mysqli->query("SELECT * FROM user_log");
 
                 while ($row = $result->fetch_assoc()) {
+                    $no++;
                     echo "<tr>";
+                    echo "<td>".$no."</td>";
                     echo "<td>" . $row['nik'] . "</td>";
                     echo "<td>" . $row['date'] . "</td>";
                     echo "<td>" . $row['time_stamp_in'] . "</td>";
@@ -153,6 +157,7 @@ foreach ($conditionArray as $condition) {
 }
 
 // Fetch data for the line chart (conditions 2, 4, and 5)
+/*
 $lineConditionArray = [2, 4, 5]; // Condition values for the line chart
 $lineDataPoints = array();
 
@@ -166,15 +171,32 @@ foreach ($lineConditionArray as $condition) {
         $lineDataPoints[$lineRow['date']] = isset($lineDataPoints[$lineRow['date']]) ? $lineDataPoints[$lineRow['date']] + $lineRow['count'] : $lineRow['count'];
     }
 }
-
+*/
 ?>
         <!-- Bar Chart Container -->
         <div class="container mt-4">
             <h3>User Log Data - Bar Chart</h3>
-            <div id="chartContainer" style="height: 300px; width: 100%;">
-                <div id="lineChartContainer" style="height: 300px; width: 100%;"></div>
-            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+                </div>
+                <?php
+                for($i = 1; $i <= 5; $i++){
+                    if(isset($_POST["from"]) && isset($_POST["to"])){
+                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
+                    }else{
+                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
+                    }
 
+                    while ($lineRow = $lineResult->fetch_assoc()) {
+                        $dataLine[$i] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
+                    }
+                ?>
+                <div class="col-md-12" style="padding-top: 70px;">
+                    <div id="lineChartContainer_<?php echo $i; ?>" style="height: 300px; width: 100%;"></div>
+                </div>
+                <?php } ?>
+            </div>
             <script>
             window.onload = function() {
                 // Bar Chart
@@ -191,13 +213,14 @@ foreach ($lineConditionArray as $condition) {
                 });
                 chart.render();
 
+                <?php for($i = 1; $i <= 5; $i++){ ?>
                 // Line Chart
-                /*
-                var lineDataPoints = <?php echo json_encode($lineDataPoints, JSON_NUMERIC_CHECK); ?>;
-                var lineChart = new CanvasJS.Chart("lineChartContainer", {
+                var lineDataPoints_<?php echo $i; ?> =
+                    <?php echo json_encode($dataLine[$i], JSON_NUMERIC_CHECK); ?>;
+                var lineChart_<?php echo $i; ?> = new CanvasJS.Chart("lineChartContainer_<?php echo $i; ?>", {
                     animationEnabled: true,
                     title: {
-                        text: "Total Data Points with Conditions 2, 4, and 5"
+                        text: "Total Data Points with Conditions <?php echo $i; ?>"
                     },
                     axisX: {
                         title: "Date"
@@ -208,11 +231,11 @@ foreach ($lineConditionArray as $condition) {
                     },
                     data: [{
                         type: "line",
-                        dataPoints: lineDataPoints
+                        dataPoints: lineDataPoints_<?php echo $i; ?>
                     }]
                 });
-                lineChart.render();
-                */
+                lineChart_<?php echo $i; ?>.render();
+                <?php } ?>
             }
             </script>
         </div>
