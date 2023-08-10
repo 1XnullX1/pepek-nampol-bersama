@@ -24,10 +24,12 @@
                         <a class="nav-link" href="registrasi.php">Registrasi ID</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="cetak_id.php">CETAK ID</a>
+                        <a class="nav-link" href="update_user.php">Update ID</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="analisis.php">Analisis</a>
+                        <a class="nav-link" href="cetak_id.php">CETAK ID</a>
+                    </li>
+                    <a class="nav-link" href="analisis.php">Analisis</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Logout</a>
@@ -181,11 +183,9 @@ foreach ($lineConditionArray as $condition) {
                 <div class="col-md-12">
                     <div id="chartContainer" style="height: 300px; width: 100%;"></div>
                 </div>
-                <?php for($i = 1; $i <= 5; $i++){ ?>
                 <div class="col-md-12" style="padding-top: 70px;">
-                    <div id="lineChartContainer_<?php echo $i; ?>" style="height: 300px; width: 100%;"></div>
+                    <div id="lineChartContainer" style="height: 300px; width: 100%;"></div>
                 </div>
-                <?php } ?>
             </div>
             <script>
             window.onload = function() {
@@ -203,25 +203,27 @@ foreach ($lineConditionArray as $condition) {
                 });
                 chart.render();
 
-                <?php
-                for($i = 1; $i <= 5; $i++){
-                    if(isset($_POST["from"]) && isset($_POST["to"])){
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
-                    }else{
-                        $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
-                    }
-
-                    while ($lineRow = $lineResult->fetch_assoc()) {
-                        $dataLine[$i][] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
-                    }
-                ?>
                 // Line Chart
+                <?php
+                    for($i = 1; $i <= 5; $i++){
+                        if(isset($_POST["from"]) && isset($_POST["to"])){
+                            $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' AND date >= '".$_POST['from']."' AND date <= '".$_POST['to']."' GROUP BY date");
+                        }else{
+                            $lineResult = $mysqli->query("SELECT date, COUNT(*) AS count FROM user_log WHERE user_log.condition = '".$i."' GROUP BY date");
+                        }
+    
+                        while ($lineRow = $lineResult->fetch_assoc()) {
+                            $dataLine[$i][] = array("label" => $lineRow["date"], "y" => $lineRow['count']);
+                        }
+                    ?>
                 var lineDataPoints_<?php echo $i; ?> =
                     <?php echo json_encode($dataLine[$i], JSON_NUMERIC_CHECK); ?>;
-                var lineChart_<?php echo $i; ?> = new CanvasJS.Chart("lineChartContainer_<?php echo $i; ?>", {
+                <?php } ?>
+
+                var lineChart = new CanvasJS.Chart("lineChartContainer", {
                     animationEnabled: true,
                     title: {
-                        text: "Total Data Points with Conditions <?php echo $i; ?>"
+                        text: "Total Data Points with Conditions"
                     },
                     axisX: {
                         title: "Date"
@@ -230,13 +232,15 @@ foreach ($lineConditionArray as $condition) {
                         title: "Total Data Points",
                         includeZero: false
                     },
-                    data: [{
-                        type: "line",
-                        dataPoints: lineDataPoints_<?php echo $i; ?>
-                    }]
+                    data: [
+                        <?php for($i = 1; $i <= 5; $i++){ ?> {
+                            type: "line",
+                            dataPoints: lineDataPoints_<?php echo $i; ?>
+                        },
+                        <?php } ?>
+                    ]
                 });
-                lineChart_<?php echo $i; ?>.render();
-                <?php } ?>
+                lineChart.render();
             }
             </script>
         </div>
@@ -266,15 +270,15 @@ foreach ($lineConditionArray as $condition) {
                     }
 
                     if ($condition === 1) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja dibawah 12 jam, berjumlah $count.</strong></li>";
+                        echo "<li><strong>Condition 1 adalah jumlah orang yang memasuki area dibawah 12 jam, berjumlah $count.</strong></li>";
                     } else if ($condition === 2) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja diatas 12 jam, berjumlah $count.</strong></li>";
+                        echo "<li><strong>Condition 2 adalah jumlah orang yang memasuki area diatas 12 jam, berjumlah $count.</strong></li>";
                     } else if ($condition === 3) {
-                        echo "<li><strong>Jumlah pekerja yang bekerja belum melakukan tap out, ada $count.</strong></li>";
+                        echo "<li><strong>Condition 3 adalah jumlah orang yang bekerja belum melakukan tap out, ada $count.</strong></li>";
                     } else if ($condition === 4) {
-                        echo "<li><strong>Jumlah pekerja yang melakukan tap in lebih dari 1 kali tanpa melakukan penyelesaian tap out, berjumlah $count.</strong></li>";
+                        echo "<li><strong>Condition 4 adalah jumlah orang yang melakukan tap in lebih dari 1 kali tanpa melakukan penyelesaian tap out, berjumlah $count.</strong></li>";
                     } else if ($condition === 5) {
-                        echo "<li><strong>Percobaan tap in dengan kartu sudah tidak aktif, berjumlah $count.</strong></li>";
+                        echo "<li><strong>Condition 5 adalah percobaan tap in dengan kartu sudah tidak aktif, berjumlah $count.</strong></li>";
                     }
                 }
                 ?>

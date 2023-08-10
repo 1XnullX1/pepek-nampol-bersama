@@ -89,7 +89,6 @@
                             <div class="invalid-feedback">
                                 p
                             </div>
-
                             <label for="jenis_id" class="form-label">Jenis ID</label>
                             <select class="form-control" id="jenis_id" name="jenis_id" required
                                 onchange="enableNoIdField()">
@@ -106,7 +105,7 @@
                             <label for="no_id" class="form-label">Nomor Identitas</label>
                             <div class="input-group has-validation">
                                 <input type="text" class="form-control" id="no_id" name="no_id"
-                                    placeholder="NOMOR IDENTITAS" required oninput="validateNoIdInput(this) ">
+                                    placeholder="NOMOR IDENTITAS" required oninput="validateNoIdInput() ">
 
                                 <div class="invalid-feedback">
                                     Nomor ID dibutuhkan.
@@ -472,33 +471,59 @@ if ($result->num_rows > 0) {
         }
     }
 
-    /* VALIDASI JENIS ID */
     function enableNoIdField() {
-        const jenisId = document.getElementById('jenis_id').value;
-        var noIdInput = document.getElementById('no_id');
+        var jenisIdSelect = document.getElementById("jenis_id");
+        var noIdInput = document.getElementById("no_id");
 
-        // Set the maximum length for no_id based on jenis_id value
-        switch (jenisId) {
-            case 'KTP':
-                noIdField.maxLength = 16;
+        if (jenisIdSelect.value === "") {
+            noIdInput.setAttribute("readonly", "readonly");
+        } else {
+            noIdInput.removeAttribute("readonly");
+        }
+
+        var jenisIdElement = document.getElementById("jenis_id");
+        var noIdElement = document.getElementById("no_id");
+
+        var selectedValue = jenisIdElement.value;
+        var maxLength = 0;
+
+        switch (selectedValue) {
+            case "KTP":
+                maxLength = 16;
                 break;
-            case 'SIM':
-                noIdField.maxLength = 14;
+            case "SIM":
+                maxLength = 14;
                 break;
-            case 'PASPORT':
-                noIdField.maxLength = 9;
+            case "PASPORT":
+                maxLength = 9;
                 break;
-            case 'ID_TESEDIA':
-                noIdField.maxLength = 6;
+            case "ID_TERSEDIA":
+                maxLength = 6;
                 break;
             default:
-                noIdField.maxLength = 16; // Set a default maximum length if jenis_id is not recognized
+                maxLength = 0;
                 break;
         }
 
-        // Add event listener to allow only numeric input for 'no_id'
-        noIdField.addEventListener('keypress', allowOnlyNumericInput);
+        noIdElement.maxLength = maxLength;
+
+        // Adjust the input value if changing from a different ID type
+        if (selectedValue !== previousSelectedValue) {
+            noIdElement.value = noIdElement.value.slice(0, maxLength);
+        }
+
+        previousSelectedValue = selectedValue;
     }
+
+    function validateNoIdInput() {
+        var inputElement = document.getElementById("no_id");
+        var inputValue = inputElement.value;
+        var sanitizedValue = inputValue.replace(/[^0-9]/g, ''); // Menghapus karakter selain angka
+        inputElement.value = sanitizedValue;
+    }
+
+
+    // /* VALIDASI JENIS ID */
 
     /* OPEN MODAL */
     function openModal() {
@@ -533,11 +558,11 @@ if ($result->num_rows > 0) {
     // Global variable to store the value of the "NOMOR IDENTITAS" input
     let noIdValue = "";
 
-    /* VALIDASI IDENTITAS */
-    function validateNoIdInput(inputElement) {
-        noIdValue = inputElement.value;
-        // Additional validation logic, if needed
-    }
+    // /* VALIDASI IDENTITAS */
+    // function validateNoIdInput(inputElement) {
+    //     noIdValue = inputElement.value;
+    //     // Additional validation logic, if needed
+    // }
 
     /* CAPTURE IMAGE TO save_image.php */
     function captureImage() {
@@ -649,16 +674,16 @@ if ($result->num_rows > 0) {
             });
     }
 
-    function enableNoIdField() {
-        var jenisIdSelect = document.getElementById("jenis_id");
-        var noIdInput = document.getElementById("no_id");
+    // function enableNoIdField() {
+    //     var jenisIdSelect = document.getElementById("jenis_id");
+    //     var noIdInput = document.getElementById("no_id");
 
-        if (jenisIdSelect.value === "" || jenisIdSelect.value === "ID_TERSEDIA") {
-            noIdInput.setAttribute("readonly", "readonly");
-        } else {
-            noIdInput.removeAttribute("readonly");
-        }
-    }
+    //     if (jenisIdSelect.value === "" || jenisIdSelect.value === "ID_TERSEDIA") {
+    //         noIdInput.setAttribute("readonly", "readonly");
+    //     } else {
+    //         noIdInput.removeAttribute("readonly");
+    //     }
+    // }
     </script>
 </body>
 

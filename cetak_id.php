@@ -23,6 +23,9 @@
                         <a class="nav-link" href="registrasi.php">Registrasi ID</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="update_user.php">Update ID</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="cetak_id.php">CETAK ID</a>
                     </li>
                     <a class="nav-link" href="analisis.php">Analisis</a>
